@@ -10,6 +10,7 @@
     let servers = [{iceServers: [ "stun.l.google.com:19305", "stun1.l.google.com:19305", "stun2.l.google.com:19305", "stun3.l.google.com:19305", "stun4.l.google.com:19305",]}];
     let localStream;
     let remoteStreams = {};
+    let size = -1;
 
     if(!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         alert("THIS APP WON'T WORK. YOUR BROWSER CAN'T ACCESS YOUR CAMERA");
@@ -75,20 +76,28 @@
 
     fetch(`/getRoomSize?roomname=${roomname}`)
         .then(res => res.json())
-        .then(async size => {
+        .then(async s => {
+            size = s.size;
             console.log(`size: ${size}`)
             if(size < 0) {
                 alert("Room does not exists.");
                 return navigate("/");
             }
 
+            try {
+                
+
             localStream = await navigator.mediaDevices.getUserMedia({
-                    audio: true,
-                    video: true
+                   audio: true,
+                    video: {
+                        width: { ideal: 1280 },
+                        height: { ideal: 720 }
+                    }
                 });
 
-            try {
-                const ws = new WebSocket(`ws://192.168.43.212:8080/ws?roomname=${roomname}`);
+                const url = new URL(window.location.href);
+                const protocol = url.protocol === "https:" ? "wss" : "ws";
+                const ws = new WebSocket(`${protocol}://${url.host}/ws?roomname=${roomname}`);
                 manageWebsoocket(ws);
             } catch(error) {
                 alert(error);
@@ -98,9 +107,9 @@
 
 <div class="h-screen w-screen flex justify-center align-center flex-column">
     <h2>local video</h2>
-    <Video stream={localStream} />
+    <Video stream={localStream} local={true} />
     <h2>foregin videos</h2>
-    <div>
+    <div class="flex flex-wrap">
        {#each Object.keys(remoteStreams) as k}
            <Video stream={remoteStreams[k]} />
        {/each} 

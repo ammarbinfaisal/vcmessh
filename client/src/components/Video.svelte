@@ -1,5 +1,6 @@
 <script>
     export let stream;
+    export let local = false;
 
     function srcObject(node, stream) {
       node.srcObject = stream;
@@ -13,4 +14,4 @@
     }
 </script>
 
-<video use:srcObject={stream} autoplay playsinline></video>
+<video use:srcObject={stream} autoplay playsinline muted={local}></video>
